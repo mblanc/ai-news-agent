@@ -29,7 +29,7 @@ playwright_mcp_tool = MCPToolset(
 reddit_mcp_tool = MCPToolset(
     connection_params=StdioServerParameters(
         command="uvx",
-        args=["--from", "git+https://github.com/adhikasp/mcp-reddit.git", "mcp-reddit"],
+        args=["mcp-server-reddit"],
         # Optional: Add environment variables if needed by the MCP server,
         # e.g., credentials if mcp-reddit required them.
         # env=os.environ.copy()

@@ -179,7 +179,7 @@ for i, site in enumerate(reddit_sites):
     researcher_agent = Agent(
         name=f"{site.name}_researcher",
         model="gemini-2.5-flash",
-        instruction=get_news_prompt(site, "fetch_reddit_hot_threads"),
+        instruction=get_news_prompt(site, "get_subreddit_top_posts with time='day'"),
         tools=[reddit_mcp_tool],
         # output_key=site.result_key,
         # after_tool_callback=create_after_tool_callback(site),
