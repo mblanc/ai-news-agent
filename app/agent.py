@@ -4,8 +4,11 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from google.adk.agents import Agent, ParallelAgent, SequentialAgent
+from google.adk.planners import BuiltInPlanner
+from google.genai.types import ThinkingConfig
 from pydantic import BaseModel
 
+from .tools.file_tools import write_to_file_tool
 from .tools.tools import (
     get_community_tweets_tool,
     get_news_from_url_tool,
@@ -25,6 +28,13 @@ logging.getLogger("opentelemetry").setLevel(logging.ERROR)
 
 
 MODEL = "gemini-2.5-flash"
+
+thinking_config = ThinkingConfig(
+    include_thoughts=False,  # Ask the model to include its thoughts in the response
+    thinking_budget=0,  # Limit the 'thinking' to 256 tokens (adjust as needed)
+)
+
+planner = BuiltInPlanner(thinking_config=thinking_config)
 
 
 class Site(BaseModel):
@@ -164,10 +174,11 @@ def get_news_prompt(site: Site, tool_name: str):
     )
 
 
-for i, site in enumerate(playwright_sites):
+for site in playwright_sites:
     researcher_agent = Agent(
         name=f"{site.name}_researcher",
         model="gemini-2.5-flash",
+        planner=planner,
         instruction=get_news_prompt(site, "browser_tab_new"),
         tools=[playwright_mcp_tool],
         output_key=site.result_key,
@@ -175,31 +186,36 @@ for i, site in enumerate(playwright_sites):
     researcher_agents.append(researcher_agent)
 
 
-for i, site in enumerate(reddit_sites):
+for site in reddit_sites:
     researcher_agent = Agent(
         name=f"{site.name}_researcher",
         model="gemini-2.5-flash",
-        instruction=get_news_prompt(site, "get_subreddit_top_posts with time='day'"),
+        planner=planner,
+        instruction=get_news_prompt(
+            site, "get_subreddit_top_posts with time='week', limit=50"
+        ),
         tools=[reddit_mcp_tool],
         # output_key=site.result_key,
         # after_tool_callback=create_after_tool_callback(site),
     )
     researcher_agents.append(researcher_agent)
 
-for i, site in enumerate(fetch_sites):
+for site in fetch_sites:
     researcher_agent = Agent(
         name=f"{site.name}_researcher",
         model="gemini-2.5-flash",
+        planner=planner,
         instruction=get_news_prompt(site, "get_news_from_url"),
         tools=[get_news_from_url_tool],
         # output_key=site.result_key,
     )
     researcher_agents.append(researcher_agent)
 
-for i, site in enumerate(twitter_sites):
+for site in twitter_sites:
     researcher_agent = Agent(
         name=f"{site.name}_researcher",
         model="gemini-2.5-flash",
+        planner=planner,
         instruction=get_news_prompt(site, "get_community_tweets"),
         tools=[get_community_tweets_tool],
         # output_key=site.result_key,
@@ -217,15 +233,47 @@ parallel_research = ParallelAgent(
 synthesis_agent = Agent(
     name="SynthesisAgent",
     model="gemini-2.5-flash",
+    planner=planner,
     instruction=(
         "You are a a specialist in AI and AI products and models.\n"
         "Your goal is to generate news articles about AI and AI products and models.\n"
         "Combine results from parallel research:\n"
         "Then generate a news article about the latest news.\n"
         "Your article should be a markdown list of news items. Try to include dates and links to the news items. Order by date desc.\n"
-        "Keep only the news for the latest 3 days. Today is {datetime.now().strftime('%d %b %Y')}"
+        "Keep only the news for the latest 3 days. Today is {datetime.now().strftime('%d %b %Y')}\n"
+        "Format should be:\n"
+        """
+# AI news
+
+## date J
+    * ai news 1 - [domain_name.extension](article 1 url)
+    * ai news 2 - [domain_name.extension](article 2 url)
+    * ...
+## date J-1
+    * ai news 1 - [domain_name.extension](article 1 url)
+    * ai news 2 - [domain_name.extension](article 2 url)
+    * ...
+## date J-2
+    * ai news 1 - [domain_name.extension](article 1 url)
+    * ai news 2 - [domain_name.extension](article 2 url)
+    * ...
+## Misc (ai news without date)
+    * ai news 1 - [domain_name.extension](article 1 url)
+    * ai news 2 - [domain_name.extension](article 2 url)
+    * ...
+"""
     ),
     description="Synthesizes parallel results",
+    output_key="generated_news",
+)
+
+writer_to_file_agent = Agent(
+    name="WriterToFileAgent",
+    model="gemini-2.5-flash",
+    instruction=(
+        "Call the write_to_file_tool."
+    ),
+    tools=[write_to_file_tool],
 )
 
 # Full pipeline: parallel execution then synthesis
@@ -234,5 +282,5 @@ root_agent = SequentialAgent(
     description=(
         "AI news specialist agent that generates news articles about AI and AI products."
     ),
-    sub_agents=[parallel_research, synthesis_agent],
+    sub_agents=[parallel_research, synthesis_agent, writer_to_file_agent],
 )
