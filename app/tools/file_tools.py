@@ -183,4 +183,6 @@ def write_to_file_tool(tool_context: ToolContext):
     with open(AI_NEWS_FILE_PATH, "w") as f:
         f.write(merged_content)
 
+    tool_context.state["news"] = merged_content
+
     return {"status": "success", "message": f"AI news content intelligently merged into {AI_NEWS_FILE_PATH}"}

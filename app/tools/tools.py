@@ -22,19 +22,21 @@ playwright_mcp_tool = MCPToolset(
                 "--headless",
             ],
         ),
-        timeout=20,
+        timeout=60,
     ),
 )
 
 reddit_mcp_tool = MCPToolset(
-    connection_params=StdioServerParameters(
-        command="uvx",
-        args=["mcp-server-reddit"],
-        # Optional: Add environment variables if needed by the MCP server,
-        # e.g., credentials if mcp-reddit required them.
-        # env=os.environ.copy()
-        timeout=20,
-    )
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="uvx",
+            args=["mcp-server-reddit"],
+            # Optional: Add environment variables if needed by the MCP server,
+            # e.g., credentials if mcp-reddit required them.
+            # env=os.environ.copy()
+        ),
+        timeout=60,
+    ),
 )
 
 # computer_use_toolset = ComputerUseToolset(

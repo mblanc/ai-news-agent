@@ -8,7 +8,7 @@ from google.adk.planners import BuiltInPlanner
 from google.genai.types import ThinkingConfig
 from pydantic import BaseModel
 
-from .tools.file_tools import write_to_file_tool
+from .tools.firestore_tools import write_to_firestore_tool
 from .tools.tools import (
     get_community_tweets_tool,
     get_news_from_url_tool,
@@ -99,6 +99,11 @@ fetch_sites = [
         name="google_ai",
         url="https://blog.google/technology/ai/",
         result_key="google_ai_result",
+    ),
+    Site(
+        name="google_deepmind",
+        url="https://blog.google/technology/google-deepmind/",
+        result_key="google_deepmind_result",
     ),
     Site(
         name="google_cloud_ai",
@@ -267,13 +272,13 @@ synthesis_agent = Agent(
     output_key="generated_news",
 )
 
-writer_to_file_agent = Agent(
-    name="WriterToFileAgent",
+writer_to_firestore_agent = Agent(
+    name="WriterToFirestoreAgent",
     model="gemini-2.5-flash",
     instruction=(
-        "Call the write_to_file_tool."
+        "Call the write_to_firestore_tool to store the generated news in Firestore database."
     ),
-    tools=[write_to_file_tool],
+    tools=[write_to_firestore_tool],
 )
 
 # Full pipeline: parallel execution then synthesis
@@ -282,5 +287,5 @@ root_agent = SequentialAgent(
     description=(
         "AI news specialist agent that generates news articles about AI and AI products."
     ),
-    sub_agents=[parallel_research, synthesis_agent, writer_to_file_agent],
+    sub_agents=[parallel_research, synthesis_agent, writer_to_firestore_agent],
 )

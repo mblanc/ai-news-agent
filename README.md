@@ -30,6 +30,29 @@ Before you begin, ensure you have:
 - **Terraform**: For infrastructure deployment - [Install](https://developer.hashicorp.com/terraform/downloads)
 - **make**: Build automation tool - [Install](https://www.gnu.org/software/make/) (pre-installed on most Unix-based systems)
 
+## Firestore Configuration
+
+This agent stores news articles in Google Cloud Firestore. Configure your Firestore settings using environment variables:
+
+### Required Environment Variables
+- `GOOGLE_CLOUD_PROJECT`: Your Google Cloud project ID
+
+### Optional Environment Variables
+- `FIRESTORE_DATABASE_ID`: Firestore database ID (defaults to `"(default)"`)
+- `FIRESTORE_COLLECTION_NAME`: Collection name for storing news (defaults to `"news"`)
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to your service account key file (for local development)
+
+### Example Configuration
+Create a `.env` file in your project root:
+```bash
+GOOGLE_CLOUD_PROJECT=your-project-id
+FIRESTORE_DATABASE_ID=(default)
+FIRESTORE_COLLECTION_NAME=news
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
+```
+
+For detailed configuration instructions, see [FIRESTORE_CONFIG.md](FIRESTORE_CONFIG.md).
+
 
 ## Quick Start (Local Testing)
 
