@@ -140,15 +140,18 @@ class FirestoreNewsManager:
             if not urls:
                 return 0, len(news_items)
 
-            # Check for existing URLs in a single query (more efficient)
+            # Check for existing URLs in chunks (Firestore IN operator supports max 30 values)
             existing_urls = set()
             if urls:
-                # Use 'in' operator for multiple URL checks (more efficient than multiple queries)
-                existing_query = self._get_collection().where(
-                    filter=FieldFilter("url", "in", urls)
-                )
-                existing_docs = list(existing_query.stream())
-                existing_urls = {doc.to_dict().get("url") for doc in existing_docs}
+                # Process URLs in chunks of 30 to respect Firestore IN operator limit
+                chunk_size = 30
+                for i in range(0, len(urls), chunk_size):
+                    url_chunk = urls[i:i + chunk_size]
+                    existing_query = self._get_collection().where(
+                        filter=FieldFilter("url", "in", url_chunk)
+                    )
+                    existing_docs = list(existing_query.stream())
+                    existing_urls.update(doc.to_dict().get("url") for doc in existing_docs)
 
             # Prepare batch write
             batch = self.db.batch()

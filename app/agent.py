@@ -55,14 +55,14 @@ fetch_sites = [
         url="https://techcrunch.com/category/artificial-intelligence/",
         result_key="tech_crunch_result",
     ),
-    # Site(
-    #     name="the_verge",
-    #     url="https://www.theverge.com/ai-artificial-intelligence",
-    #     result_key="the_verge_result",
-    # ),
+    Site(
+        name="the_verge",
+        url="https://www.theverge.com/ai-artificial-intelligence",
+        result_key="the_verge_result",
+    ),
     Site(
         name="ai_weekly",
-        url="https://aiweekly.co/",
+        url="https://aiweekly.co/issues.rss",
         result_key="ai_weekly_result",
     ),
     Site(
@@ -87,7 +87,7 @@ fetch_sites = [
     ),
     Site(
         name="wired",
-        url="https://www.wired.com/tag/artificial-intelligence/",
+        url="https://www.wired.com/feed/tag/ai/latest/rss",
         result_key="wired_result",
     ),
     Site(
@@ -97,13 +97,8 @@ fetch_sites = [
     ),
     Site(
         name="google_ai",
-        url="https://blog.google/technology/ai/",
+        url="https://blog.google/rss/",
         result_key="google_ai_result",
-    ),
-    Site(
-        name="google_deepmind",
-        url="https://blog.google/technology/google-deepmind/",
-        result_key="google_deepmind_result",
     ),
     Site(
         name="google_cloud_ai",
@@ -122,7 +117,7 @@ fetch_sites = [
     ),
     Site(
         name="anthropic_news",
-        url="https://www.anthropic.com/news",
+        url="https://rsshub.app/anthropic/news",
         result_key="anthropic_news_result",
     ),
 ]
@@ -239,34 +234,42 @@ synthesis_agent = Agent(
     name="SynthesisAgent",
     model="gemini-2.5-flash",
     planner=planner,
-    instruction=(
-        "You are a a specialist in AI and AI products and models.\n"
-        "Your goal is to generate news articles about AI and AI products and models.\n"
-        "Combine results from parallel research:\n"
-        "Then generate a news article about the latest news.\n"
-        "Your article should be a markdown list of news items. Try to include dates and links to the news items. Order by date desc.\n"
-        "Keep only the news for the latest 3 days. Today is {datetime.now().strftime('%d %b %Y')}\n"
-        "Format should be:\n"
-        """
+    instruction=("""
+You are a a specialist in AI and AI products and models.
+Your goal is to generate news articles about AI and AI products and models.
+Combine results from parallel research:
+Then generate a news article about the latest news.
+Your article should be a markdown list of news items. Try to include dates and links to the news items. Order by date desc.
+Keep only the news for the latest 3 days. Today is {datetime.now().strftime('%d %b %Y')}
+Format should be:
+
 # AI news
 
 ## date J
+
     * ai news 1 - [domain_name.extension](article 1 url)
     * ai news 2 - [domain_name.extension](article 2 url)
     * ...
+
 ## date J-1
+
     * ai news 1 - [domain_name.extension](article 1 url)
     * ai news 2 - [domain_name.extension](article 2 url)
     * ...
+
 ## date J-2
+
     * ai news 1 - [domain_name.extension](article 1 url)
     * ai news 2 - [domain_name.extension](article 2 url)
     * ...
+
 ## Misc (ai news without date)
+
     * ai news 1 - [domain_name.extension](article 1 url)
     * ai news 2 - [domain_name.extension](article 2 url)
     * ...
 """
+
     ),
     description="Synthesizes parallel results",
     output_key="generated_news",
